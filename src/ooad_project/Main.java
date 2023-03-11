@@ -42,11 +42,11 @@ public class Main {
 		window.setLayout(new BorderLayout());
 		
         modesPane = new ModesPanel();
-        window.add(modesPane, BorderLayout.WEST);
+        window.getContentPane().add(modesPane, BorderLayout.WEST);
 //        window.add(modesPane, BorderLayout.WEST);
         
         canvas = new CanvasPanel();
-        window.add(canvas, BorderLayout.CENTER);
+        window.getContentPane().add(canvas, BorderLayout.CENTER);
 //        window.add(canvas, BorderLayout.CENTER);
         
         window.setVisible(true);
