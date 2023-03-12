@@ -33,6 +33,7 @@ public class Main {
 	public static String mode = "";
     private static JPanel modesPane;
     private static JPanel canvas;
+    private static MenuBar mb;
     
 	public static void main(String[] args) {
 		window = new JFrame();
@@ -40,6 +41,9 @@ public class Main {
 		window.setBounds(300, 100, win_width, win_height);
 		window.setTitle("UML editor");
 		window.setLayout(new BorderLayout());
+		
+		mb = new UMLMenu();
+		window.setMenuBar(mb);
 		
         modesPane = new ModesPanel();
         window.getContentPane().add(modesPane, BorderLayout.WEST);

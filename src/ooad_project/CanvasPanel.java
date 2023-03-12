@@ -1,6 +1,9 @@
 package ooad_project;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.awt.*;
 import javax.swing.*;
@@ -11,6 +14,8 @@ public class CanvasPanel extends JPanel implements MouseListener {
 	private ArrayList<JPanel> classUsePanels = new ArrayList<JPanel>();
 	private JPanel source, dest;
 	private Point srcPoint, destPoint;
+	private String srcAt, destAt;
+	private String[] dirs = {"top", "right", "bottom", "left"};
 	
 	public CanvasPanel() {
 		this.setLayout(null);
@@ -35,7 +40,7 @@ public class CanvasPanel extends JPanel implements MouseListener {
 			aClassJPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 			aClassJPanel.setBounds(e.getX(), e.getY(), 100, 150);
 			
-			classUsePanels.add(aClassJPanel);
+//			classUsePanels.add(aClassJPanel);
 		}
 		else if (Main.mode == "use case") {
 			JPanel useCase = new UseCasePanel(e.getX(), e.getY());
@@ -43,7 +48,7 @@ public class CanvasPanel extends JPanel implements MouseListener {
 			Color borderColor = this.getBackground();
 			useCase.setBorder(BorderFactory.createLineBorder(borderColor));
 			
-			classUsePanels.add(useCase);
+//			classUsePanels.add(useCase);
 		}
 	}
 
@@ -52,10 +57,12 @@ public class CanvasPanel extends JPanel implements MouseListener {
 		// TODO Auto-generated method stub
 		if (Main.mode == "assoc") {
 			srcPoint = e.getPoint();
+			System.out.println("src point before: " + srcPoint);
 			JPanel component = (JPanel)this.getComponentAt(srcPoint);
 			if (component != null) {
 				source = component;
-				findNearestMidPoint(srcPoint, component);
+				srcPoint = findNearestMidPoint(srcPoint, component);
+				System.out.println("src point after: " + srcPoint);
 			}
 		}
 		else if (Main.mode == "gen") {
@@ -75,7 +82,7 @@ public class CanvasPanel extends JPanel implements MouseListener {
 			JPanel component = (JPanel)this.getComponentAt(destPoint);
 			if (component != null) {
 				dest = component;
-				findNearestMidPoint(destPoint, component);
+				destPoint = findNearestMidPoint(destPoint, component);
 				repaint();
 			}
 		}
@@ -114,16 +121,16 @@ public class CanvasPanel extends JPanel implements MouseListener {
 		}
 	}
 	
-	public void findNearestMidPoint(Point p, JPanel obj) {
+	public Point findNearestMidPoint(Point p, JPanel obj) {
 		// find minimum distance of p to mid point
 		int width = obj.getWidth(), height = obj.getHeight();
 		Point upperLeft = obj.getLocation();
 		
 		ArrayList<Point> mids = new ArrayList<Point>(4);
-		mids.add(new Point(width / 2, upperLeft.x));
-		mids.add(new Point(width, height / 2));
-		mids.add(new Point(width / 2, height));
-		mids.add(new Point(upperLeft.x, height/2));
+		mids.add(new Point(upperLeft.x + width / 2, upperLeft.y + 0)); // top
+		mids.add(new Point(upperLeft.x + width, upperLeft.y + height / 2)); // right
+		mids.add(new Point(upperLeft.x + width / 2, upperLeft.y + height)); // bottom
+		mids.add(new Point(upperLeft.x + 0, upperLeft.y + height/2));  // left
 		
 		int minIdx = 0;
 		double minVal = p.distance(mids.get(0));
@@ -135,13 +142,35 @@ public class CanvasPanel extends JPanel implements MouseListener {
 			}
 		}
 		
-		p = mids.get(minIdx);
+		return mids.get(minIdx);
 	}
 	
 	private void drawAssocLine(Graphics g) {
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.drawLine(srcPoint.x, srcPoint.y, destPoint.x, destPoint.y);
 		g2d.setStroke(new BasicStroke(20));
+		
+//		int sign;
+//		if (srcPoint.x < destPoint.x) {
+//			sign = 1;
+//		}
+//		
+//		if (srcAt == "top") {
+//			if (destAt == "top") {
+//				g2d.drawLine(srcPoint.x, srcPoint.y, srcPoint.x, destPoint.y - 10);
+//				g2d.drawLine(srcPoint.x, destPoint.y - 10, destPoint.x, destPoint.y - 10);
+//				g2d.drawLine(destPoint.x, destPoint.y - 10, destPoint.x, destPoint.y);
+//			}
+//		}
+//		else if (srcAt == "right") {
+//			
+//		}
+//		else if (srcAt == "bottom") {
+//			
+//		}
+//		else if (srcAt == "left") {
+//			
+//		}
 	}
 	
 	private void drawGenLine(Graphics g) {
