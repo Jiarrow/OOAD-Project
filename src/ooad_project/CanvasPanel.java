@@ -4,6 +4,9 @@ import java.awt.event.MouseListener;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.Line2D.Double;
 import java.util.ArrayList;
 import java.awt.*;
 import javax.swing.*;
@@ -11,11 +14,14 @@ import javax.swing.*;
 
 public class CanvasPanel extends JPanel implements MouseListener {
 	private JLabel canvasText;
-	private ArrayList<JPanel> classUsePanels = new ArrayList<JPanel>();
-	private JPanel source, dest;
+//	private ArrayList<JPanel> classUsePanels = new ArrayList<JPanel>();
+	private ArrayList<UMLConnection> connections = new ArrayList<UMLConnection>();
+	
+	private boolean pressedInUMLObj;
+	private UMLObject source, dest;
 	private Point srcPoint, destPoint;
-	private String srcAt, destAt;
-	private String[] dirs = {"top", "right", "bottom", "left"};
+//	private String srcAt, destAt;
+//	private String[] dirs = {"top", "right", "bottom", "left"};
 	
 	public CanvasPanel() {
 		this.setLayout(null);
@@ -35,7 +41,7 @@ public class CanvasPanel extends JPanel implements MouseListener {
 		if (Main.mode == "class") {
 			// when mouse clicked, get class or use class panel xy-coord
 //			System.out.println("mouse clicked. "+ e.getX() + " " + e.getY());
-			JPanel aClassJPanel = new ClassPanel();
+			UMLObject aClassJPanel = new ClassPanel();
 			this.add(aClassJPanel);
 			aClassJPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 			aClassJPanel.setBounds(e.getX(), e.getY(), 100, 150);
@@ -54,43 +60,48 @@ public class CanvasPanel extends JPanel implements MouseListener {
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-		if (Main.mode == "assoc") {
+		// source point of line
+		if (Main.mode == "assoc" || Main.mode == "gen" || Main.mode == "compo") {
 			srcPoint = e.getPoint();
-			System.out.println("src point before: " + srcPoint);
-			JPanel component = (JPanel)this.getComponentAt(srcPoint);
-			if (component != null) {
-				source = component;
-				srcPoint = findNearestMidPoint(srcPoint, component);
-				System.out.println("src point after: " + srcPoint);
+//			System.out.println("src point before: " + srcPoint);
+			Component component = this.getComponentAt(srcPoint);
+			if (component instanceof UMLObject) {
+				source = (UMLObject)component;
+				srcPoint = findNearestMidPoint(srcPoint, (UMLObject)component);
+//				System.out.println("src point after: " + srcPoint);
+				pressedInUMLObj = true;
 			}
-		}
-		else if (Main.mode == "gen") {
-			
-		}
-		else if (Main.mode == "compo") {
-			
+			else {
+				pressedInUMLObj = false;
+			}
 		}
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		// mouse (x,y) stop the class or use case which we want to connect to
+		if (pressedInUMLObj == false) return;
 		
-		if (Main.mode == "assoc") {
+		// destination point of line
+		if (Main.mode == "assoc" || Main.mode == "gen" || Main.mode == "compo") {
 			destPoint = e.getPoint();
-			JPanel component = (JPanel)this.getComponentAt(destPoint);
-			if (component != null) {
-				dest = component;
-				destPoint = findNearestMidPoint(destPoint, component);
+			Component component = this.getComponentAt(destPoint);
+			if (component instanceof UMLObject) {
+				dest = (UMLObject)component;
+				destPoint = findNearestMidPoint(destPoint, (UMLObject)component);
+				if (Main.mode == "assoc") {
+					UMLConnection assocLine = new AssocLine(source, dest, srcPoint, destPoint);
+					connections.add(assocLine);
+				}
+				else if (Main.mode == "gen") {
+					UMLConnection genLine = new GenLine(source, dest, srcPoint, destPoint);
+					connections.add(genLine);
+				}
+				else {
+					UMLConnection compoLine = new CompositionLine(source, dest, srcPoint, destPoint);
+					connections.add(compoLine);
+				}
 				repaint();
 			}
-		}
-		else if (Main.mode == "gen") {
-			
-		}
-		else if (Main.mode == "compo") {
-			
 		}
 	}
 
@@ -110,27 +121,19 @@ public class CanvasPanel extends JPanel implements MouseListener {
 	protected void paintComponent(Graphics g) {
 		// TODO Auto-generated method stub
 		super.paintComponent(g);
-		if (Main.mode == "assoc") {
-			drawAssocLine(g);
-		}
-		else if (Main.mode == "gen") {
-			
-		}
-		else if (Main.mode == "compo") {
-			
+		
+		if (Main.mode == "assoc" || Main.mode == "gen" || Main.mode == "compo") {
+			for (UMLConnection c : connections) {
+				c.drawLine(g);
+			}
 		}
 	}
 	
-	public Point findNearestMidPoint(Point p, JPanel obj) {
+	public Point findNearestMidPoint(Point p, UMLObject obj) {
 		// find minimum distance of p to mid point
-		int width = obj.getWidth(), height = obj.getHeight();
-		Point upperLeft = obj.getLocation();
 		
-		ArrayList<Point> mids = new ArrayList<Point>(4);
-		mids.add(new Point(upperLeft.x + width / 2, upperLeft.y + 0)); // top
-		mids.add(new Point(upperLeft.x + width, upperLeft.y + height / 2)); // right
-		mids.add(new Point(upperLeft.x + width / 2, upperLeft.y + height)); // bottom
-		mids.add(new Point(upperLeft.x + 0, upperLeft.y + height/2));  // left
+		obj.calcuMidPoints();
+		ArrayList<Point> mids = obj.getMidPoints();
 		
 		int minIdx = 0;
 		double minVal = p.distance(mids.get(0));
@@ -143,41 +146,5 @@ public class CanvasPanel extends JPanel implements MouseListener {
 		}
 		
 		return mids.get(minIdx);
-	}
-	
-	private void drawAssocLine(Graphics g) {
-		Graphics2D g2d = (Graphics2D)g;
-		g2d.drawLine(srcPoint.x, srcPoint.y, destPoint.x, destPoint.y);
-		g2d.setStroke(new BasicStroke(20));
-		
-//		int sign;
-//		if (srcPoint.x < destPoint.x) {
-//			sign = 1;
-//		}
-//		
-//		if (srcAt == "top") {
-//			if (destAt == "top") {
-//				g2d.drawLine(srcPoint.x, srcPoint.y, srcPoint.x, destPoint.y - 10);
-//				g2d.drawLine(srcPoint.x, destPoint.y - 10, destPoint.x, destPoint.y - 10);
-//				g2d.drawLine(destPoint.x, destPoint.y - 10, destPoint.x, destPoint.y);
-//			}
-//		}
-//		else if (srcAt == "right") {
-//			
-//		}
-//		else if (srcAt == "bottom") {
-//			
-//		}
-//		else if (srcAt == "left") {
-//			
-//		}
-	}
-	
-	private void drawGenLine(Graphics g) {
-		
-	}
-	
-	private void drawCompoLine(Graphics g) {
-		
 	}
 }

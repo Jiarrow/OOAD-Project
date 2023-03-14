@@ -7,13 +7,14 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 
-public class ClassPanel extends JPanel {
+public class ClassPanel extends UMLObject {
+	private JLabel name;
 	private JPanel upPanel, centerPanel, downPanel;
-	// order is top, right, bottom, left
-	public ArrayList<Point> midPoints = new ArrayList<Point>(4);
 	
 	public ClassPanel() {
 		super(new GridLayout(3, 1));
+		
+		name = new JLabel("class");
 		
 		upPanel = new JPanel();
 		upPanel.add(new JLabel("Order"));

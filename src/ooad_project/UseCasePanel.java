@@ -7,9 +7,10 @@ import java.awt.Graphics2D;
 import javax.swing.*;
 
 
-public class UseCasePanel extends JPanel {
+public class UseCasePanel extends UMLObject {
 
 	public UseCasePanel(int x, int y) {
+		super();
 		this.setPreferredSize(new Dimension(80, 50));
 		this.setBounds(x, y, 80, 40);
 //		this.setBorder(BorderFactory.createLineBorder(Color.black));
